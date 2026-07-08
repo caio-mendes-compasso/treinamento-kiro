@@ -20,11 +20,97 @@ const defaultParams: ProductQueryParams = {
 
 describe('filterProducts', () => {
 
-  it('returns products with price >= minPrice', () => {
-    const params: ProductQueryParams = { ...defaultParams, minPrice: 899 };
-    const result = filterProducts(testProducts, params);
+  it('deve retornar todos os produtos quando nenhum filtro é aplicado', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams };
 
-    expect(result).toHaveLength(3);
-    expect(result.every((p) => p.price >= 899)).toBe(true);
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(5);
+    expect(resultado).toEqual(testProducts);
+  });
+
+  it('deve retornar produtos da categoria quando category é informado', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, category: 'eletronicos' };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(2);
+    expect(resultado.every((p) => p.category === 'eletronicos')).toBe(true);
+  });
+
+  it('deve retornar produtos com preço >= minPrice quando minPrice é informado', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, minPrice: 899 };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(3);
+    expect(resultado.every((p) => p.price >= 899)).toBe(true);
+  });
+
+  it('deve retornar produtos com preço <= maxPrice quando maxPrice é informado', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, maxPrice: 100 };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(2);
+    expect(resultado.every((p) => p.price <= 100)).toBe(true);
+  });
+
+  it('deve retornar produtos dentro da faixa quando minPrice e maxPrice são combinados', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, minPrice: 40, maxPrice: 1000 };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(2);
+    expect(resultado.every((p) => p.price >= 40 && p.price <= 1000)).toBe(true);
+  });
+
+  it('deve retornar lista vazia quando nenhum produto atende aos filtros', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, category: 'inexistente' };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(0);
+  });
+
+  it('deve retornar lista vazia quando a lista de produtos é vazia', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, category: 'eletronicos' };
+
+    // Act - executar ação
+    const resultado = filterProducts([], params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(0);
+  });
+
+  it('deve combinar filtros de categoria e preço quando ambos são informados', () => {
+    // Arrange - preparar dados
+    const params: ProductQueryParams = { ...defaultParams, category: 'moveis', minPrice: 1000 };
+
+    // Act - executar ação
+    const resultado = filterProducts(testProducts, params);
+
+    // Assert - verificar resultado
+    expect(resultado).toHaveLength(1);
+    expect(resultado[0].name).toBe('Mesa');
   });
 });
