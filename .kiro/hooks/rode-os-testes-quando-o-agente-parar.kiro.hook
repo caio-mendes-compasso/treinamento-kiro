@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "name": "Rode os testes quando o agente parar",
+  "description": "Executa os testes automaticamente após o agente finalizar uma tarefa",
+  "when": {
+    "type": "agentStop"
+  },
+  "then": {
+    "type": "runCommand",
+    "command": "npx vitest --run --clearCache"
+  },
+  "workspaceFolderName": "treinamento-kiro",
+  "shortName": "rode-os-testes-quando-o-agente-parar"
+}

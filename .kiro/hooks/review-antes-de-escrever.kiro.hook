@@ -1,0 +1,16 @@
+{
+  "version": "1.0.0",
+  "enabled": true,
+  "name": "Review antes de escrever",
+  "description": "Antes de qualquer operação de escrita em arquivo, o agente verifica se o código segue os padrões do projeto",
+  "when": {
+    "type": "preToolUse",
+    "toolTypes": [
+      "write"
+    ]
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "\"Antes de escrever, verifique:\n1. O código segue o padrão de camadas (routes → services → database)?\n2. Funções de service são puras?\n3. Naming conventions estão corretas?\nSe algo estiver fora do padrão, corrija antes de salvar."
+  }
+}
