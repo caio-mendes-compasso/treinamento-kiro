@@ -1,4 +1,32 @@
-.env
+# Dependencies
 node_modules/
+
+# Build output
+dist/
+
+# Coverage
+coverage/
+
+# Environment variables
+.env
+.env.local
+.env.*
+
+# OS files
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temp files
+*.tmp
+*.swp
 dist/
 .kiro/settings/mcp.json

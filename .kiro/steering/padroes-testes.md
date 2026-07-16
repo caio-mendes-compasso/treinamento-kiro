@@ -1,6 +1,6 @@
 ---
 inclusion: fileMatch
-fileMatchPattern: "**/*.test.ts"
+fileMatchPattern: "tests/**"
 ---
 # Padrões de Teste
 ## Framework
