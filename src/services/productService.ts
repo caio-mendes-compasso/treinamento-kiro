@@ -1,9 +1,12 @@
-import { Product } from '../database/products';
+import { Product, products } from '../database/products';
 import {
+  CreateProductInput,
+  CreateProductValidationResult,
   PaginationMetadata,
   ProductQueryParams,
   ValidationError,
   ValidationResult,
+  VALID_CATEGORIES,
 } from '../types/productTypes';
 
 /**
@@ -175,4 +178,80 @@ export function paginateProducts(
   const data = products.slice(offset, offset + limit);
 
   return { data, metadata: { total, page, hasNext } };
+}
+
+/**
+ * Validates the request body for creating a new product.
+ * Collects all errors in a single pass before returning.
+ */
+export function validateCreateProduct(body: Record<string, unknown>): CreateProductValidationResult {
+  const errors: ValidationError[] = [];
+
+  // Validate name
+  if (body.name === undefined || body.name === null || body.name === '') {
+    errors.push({ field: 'name', message: 'name is required' });
+  } else if (typeof body.name !== 'string') {
+    errors.push({ field: 'name', message: 'name must be a string' });
+  }
+
+  // Validate description
+  if (body.description === undefined || body.description === null || body.description === '') {
+    errors.push({ field: 'description', message: 'description is required' });
+  } else if (typeof body.description !== 'string') {
+    errors.push({ field: 'description', message: 'description must be a string' });
+  }
+
+  // Validate price
+  if (body.price === undefined || body.price === null) {
+    errors.push({ field: 'price', message: 'price is required' });
+  } else if (typeof body.price !== 'number' || isNaN(body.price)) {
+    errors.push({ field: 'price', message: 'price must be a number' });
+  } else if (body.price <= 0) {
+    errors.push({ field: 'price', message: 'price must be greater than 0' });
+  }
+
+  // Validate category
+  if (body.category === undefined || body.category === null || body.category === '') {
+    errors.push({ field: 'category', message: 'category is required' });
+  } else if (typeof body.category !== 'string') {
+    errors.push({ field: 'category', message: 'category must be a string' });
+  } else if (!VALID_CATEGORIES.includes(body.category as (typeof VALID_CATEGORIES)[number])) {
+    errors.push({
+      field: 'category',
+      message: `category must be one of: ${VALID_CATEGORIES.join(', ')}`,
+    });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    input: {
+      name: body.name as string,
+      description: body.description as string,
+      price: body.price as number,
+      category: body.category as CreateProductInput['category'],
+    },
+  };
+}
+
+/**
+ * Creates a new product and adds it to the in-memory store.
+ * Generates id (incremental) and createdAt (current ISO timestamp).
+ */
+export function createProduct(input: CreateProductInput): Product {
+  const lastId = products.length > 0 ? Math.max(...products.map((p) => Number(p.id))) : 0;
+  const newProduct: Product = {
+    id: String(lastId + 1),
+    name: input.name,
+    description: input.description,
+    price: input.price,
+    category: input.category,
+    createdAt: new Date().toISOString(),
+  };
+
+  products.push(newProduct);
+  return newProduct;
 }

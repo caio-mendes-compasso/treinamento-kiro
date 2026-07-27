@@ -51,3 +51,27 @@ export interface ProductListResponse {
 export interface ProductErrorResponse {
   error: string;
 }
+
+/**
+ * Valid categories for products.
+ */
+export const VALID_CATEGORIES = ['eletronicos', 'moveis', 'acessorios'] as const;
+export type ProductCategory = (typeof VALID_CATEGORIES)[number];
+
+/**
+ * Input data for creating a new product (fields provided by the client).
+ */
+export interface CreateProductInput {
+  name: string;
+  description: string;
+  price: number;
+  category: ProductCategory;
+}
+
+/**
+ * Result of validating create product input.
+ * Either succeeds with parsed input or fails with a list of errors.
+ */
+export type CreateProductValidationResult =
+  | { success: true; input: CreateProductInput }
+  | { success: false; errors: ValidationError[] };
