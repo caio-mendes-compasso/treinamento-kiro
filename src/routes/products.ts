@@ -5,6 +5,8 @@ import {
   filterProducts,
   sortProducts,
   paginateProducts,
+  validateCreateProduct,
+  createProduct,
 } from '../services/productService';
 
 export const productsRouter = Router();
@@ -25,4 +27,20 @@ productsRouter.get('/', (req: Request, res: Response) => {
 
   // 3. Respond
   return res.status(200).json(result);
+});
+
+productsRouter.post('/', (req: Request, res: Response) => {
+  // 1. Validate request body
+  const validation = validateCreateProduct(req.body);
+
+  if (!validation.success) {
+    const errorString = validation.errors.map((e) => e.message).join('; ');
+    return res.status(400).json({ error: errorString });
+  }
+
+  // 2. Create product
+  const newProduct = createProduct(products, validation.data);
+
+  // 3. Respond with created product
+  return res.status(201).json(newProduct);
 });
