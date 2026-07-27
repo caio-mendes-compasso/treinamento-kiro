@@ -1,7 +1,11 @@
 import { Product } from '../database/products';
 import {
+  CreateProductBody,
+  CreateProductValidationResult,
   PaginationMetadata,
+  ProductCategory,
   ProductQueryParams,
+  VALID_CATEGORIES,
   ValidationError,
   ValidationResult,
 } from '../types/productTypes';
@@ -175,4 +179,85 @@ export function paginateProducts(
   const data = products.slice(offset, offset + limit);
 
   return { data, metadata: { total, page, hasNext } };
+}
+
+/**
+ * Validates the request body for creating a new product.
+ * Collects all errors in a single pass before returning.
+ */
+export function validateCreateProduct(body: CreateProductBody): CreateProductValidationResult {
+  const errors: ValidationError[] = [];
+
+  // Validate name
+  if (body.name === undefined || body.name === null || body.name === '') {
+    errors.push({ field: 'name', message: 'name is required' });
+  } else if (typeof body.name !== 'string') {
+    errors.push({ field: 'name', message: 'name must be a string' });
+  }
+
+  // Validate description
+  if (body.description === undefined || body.description === null || body.description === '') {
+    errors.push({ field: 'description', message: 'description is required' });
+  } else if (typeof body.description !== 'string') {
+    errors.push({ field: 'description', message: 'description must be a string' });
+  }
+
+  // Validate price
+  if (body.price === undefined || body.price === null) {
+    errors.push({ field: 'price', message: 'price is required' });
+  } else if (typeof body.price !== 'number' || isNaN(body.price)) {
+    errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+  } else if (body.price <= 0) {
+    errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+  }
+
+  // Validate category
+  if (body.category === undefined || body.category === null || body.category === '') {
+    errors.push({ field: 'category', message: 'category is required' });
+  } else if (!VALID_CATEGORIES.includes(body.category as ProductCategory)) {
+    errors.push({
+      field: 'category',
+      message: 'category must be one of: eletronicos, moveis, acessorios',
+    });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    data: {
+      name: body.name as string,
+      description: body.description as string,
+      price: body.price as number,
+      category: body.category as ProductCategory,
+    },
+  };
+}
+
+/**
+ * Creates a new product and adds it to the products array.
+ * Generates an incremental ID and sets createdAt to the current timestamp.
+ */
+export function createProduct(
+  products: Product[],
+  data: { name: string; description: string; price: number; category: ProductCategory },
+): Product {
+  const maxId = products.reduce((max, p) => {
+    const numId = parseInt(p.id, 10);
+    return numId > max ? numId : max;
+  }, 0);
+
+  const newProduct: Product = {
+    id: String(maxId + 1),
+    name: data.name,
+    description: data.description,
+    price: data.price,
+    category: data.category,
+    createdAt: new Date().toISOString(),
+  };
+
+  products.push(newProduct);
+  return newProduct;
 }

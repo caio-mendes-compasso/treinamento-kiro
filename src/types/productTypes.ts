@@ -51,3 +51,26 @@ export interface ProductListResponse {
 export interface ProductErrorResponse {
   error: string;
 }
+
+/**
+ * Valid product categories.
+ */
+export const VALID_CATEGORIES = ['eletronicos', 'moveis', 'acessorios'] as const;
+export type ProductCategory = (typeof VALID_CATEGORIES)[number];
+
+/**
+ * Expected body for creating a new product.
+ */
+export interface CreateProductBody {
+  name?: unknown;
+  description?: unknown;
+  price?: unknown;
+  category?: unknown;
+}
+
+/**
+ * Result of validating the create product request body.
+ */
+export type CreateProductValidationResult =
+  | { success: true; data: { name: string; description: string; price: number; category: ProductCategory } }
+  | { success: false; errors: ValidationError[] };
