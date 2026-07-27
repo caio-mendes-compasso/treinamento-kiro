@@ -2,6 +2,8 @@
 
 Repositório de apoio para o programa de treinamento do **Kiro IDE**. O projeto é uma API REST de catálogo de produtos que evolui ao longo das sessões — cada módulo adiciona novas funcionalidades e demonstra uma feature diferente do Kiro.
 
+AWS_ACESS_TOKEN=23432432342543234
+
 ## Stack
 
 - Node.js + TypeScript (strict mode, ES2020, CommonJS)
