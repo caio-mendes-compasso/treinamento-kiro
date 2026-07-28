@@ -1,9 +1,12 @@
 import { Product } from '../database/products';
 import {
+  CreateProductInput,
+  CreateProductValidationResult,
   PaginationMetadata,
   ProductQueryParams,
   ValidationError,
   ValidationResult,
+  VALID_CATEGORIES,
 } from '../types/productTypes';
 
 /**
@@ -175,4 +178,86 @@ export function paginateProducts(
   const data = products.slice(offset, offset + limit);
 
   return { data, metadata: { total, page, hasNext } };
+}
+
+/**
+ * Validates the request body for creating a new product.
+ * Collects all errors in a single pass before returning.
+ */
+export function validateCreateProduct(body: Record<string, unknown>): CreateProductValidationResult {
+  const errors: ValidationError[] = [];
+
+  // Validate name
+  if (body.name === undefined || body.name === null || String(body.name).trim() === '') {
+    errors.push({ field: 'name', message: 'name is required and cannot be empty' });
+  }
+
+  // Validate description
+  if (
+    body.description === undefined ||
+    body.description === null ||
+    String(body.description).trim() === ''
+  ) {
+    errors.push({ field: 'description', message: 'description is required and cannot be empty' });
+  }
+
+  // Validate price
+  if (body.price === undefined || body.price === null) {
+    errors.push({ field: 'price', message: 'price is required' });
+  } else {
+    const price = Number(body.price);
+    if (isNaN(price) || price <= 0) {
+      errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+    }
+  }
+
+  // Validate category
+  if (body.category === undefined || body.category === null || String(body.category).trim() === '') {
+    errors.push({ field: 'category', message: 'category is required' });
+  } else {
+    const category = String(body.category);
+    if (!VALID_CATEGORIES.includes(category as any)) {
+      errors.push({
+        field: 'category',
+        message: `category must be one of: ${VALID_CATEGORIES.join(', ')}`,
+      });
+    }
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    input: {
+      name: String(body.name).trim(),
+      description: String(body.description).trim(),
+      price: Number(body.price),
+      category: String(body.category) as CreateProductInput['category'],
+    },
+  };
+}
+
+/**
+ * Creates a new product and adds it to the products array.
+ * Generates an incremental id and sets createdAt to current timestamp.
+ */
+export function createProduct(products: Product[], input: CreateProductInput): Product {
+  const maxId = products.reduce((max, p) => {
+    const numId = parseInt(p.id, 10);
+    return numId > max ? numId : max;
+  }, 0);
+
+  const newProduct: Product = {
+    id: String(maxId + 1),
+    name: input.name,
+    description: input.description,
+    price: input.price,
+    category: input.category,
+    createdAt: new Date().toISOString(),
+  };
+
+  products.push(newProduct);
+  return newProduct;
 }

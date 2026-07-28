@@ -1,6 +1,29 @@
 import { Product } from '../database/products';
 
 /**
+ * Valid product categories.
+ */
+export const VALID_CATEGORIES = ['eletronicos', 'moveis', 'acessorios'] as const;
+export type ProductCategory = (typeof VALID_CATEGORIES)[number];
+
+/**
+ * Input body for creating a new product (POST /products).
+ */
+export interface CreateProductInput {
+  name: string;
+  description: string;
+  price: number;
+  category: ProductCategory;
+}
+
+/**
+ * Result of validating a create product request body.
+ */
+export type CreateProductValidationResult =
+  | { success: true; input: CreateProductInput }
+  | { success: false; errors: ValidationError[] };
+
+/**
  * Parsed and validated query parameters for the product listing endpoint.
  */
 export interface ProductQueryParams {
