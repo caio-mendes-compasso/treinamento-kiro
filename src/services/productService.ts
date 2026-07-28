@@ -1,7 +1,10 @@
 import { Product } from '../database/products';
 import {
+  CreateProductBody,
+  CreateProductValidationResult,
   PaginationMetadata,
   ProductQueryParams,
+  VALID_CATEGORIES,
   ValidationError,
   ValidationResult,
 } from '../types/productTypes';
@@ -175,4 +178,97 @@ export function paginateProducts(
   const data = products.slice(offset, offset + limit);
 
   return { data, metadata: { total, page, hasNext } };
+}
+
+/**
+ * Validates the request body for creating a new product.
+ * Collects all errors in a single pass before returning.
+ */
+export function validateCreateProduct(body: unknown): CreateProductValidationResult {
+  const errors: ValidationError[] = [];
+
+  if (body === null || body === undefined || typeof body !== 'object') {
+    return { success: false, errors: [{ field: 'body', message: 'request body is required' }] };
+  }
+
+  const data = body as Record<string, unknown>;
+
+  // Validate name
+  if (data.name === undefined || data.name === null || data.name === '') {
+    errors.push({ field: 'name', message: 'name is required' });
+  } else if (typeof data.name !== 'string') {
+    errors.push({ field: 'name', message: 'name must be a string' });
+  } else if (data.name.length < 1 || data.name.length > 200) {
+    errors.push({ field: 'name', message: 'name must be between 1 and 200 characters' });
+  }
+
+  // Validate description
+  if (data.description === undefined || data.description === null || data.description === '') {
+    errors.push({ field: 'description', message: 'description is required' });
+  } else if (typeof data.description !== 'string') {
+    errors.push({ field: 'description', message: 'description must be a string' });
+  } else if (data.description.length < 1 || data.description.length > 500) {
+    errors.push({
+      field: 'description',
+      message: 'description must be between 1 and 500 characters',
+    });
+  }
+
+  // Validate price
+  if (data.price === undefined || data.price === null) {
+    errors.push({ field: 'price', message: 'price is required' });
+  } else if (typeof data.price !== 'number' || isNaN(data.price)) {
+    errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+  } else if (data.price <= 0) {
+    errors.push({ field: 'price', message: 'price must be a number greater than 0' });
+  }
+
+  // Validate category
+  if (data.category === undefined || data.category === null || data.category === '') {
+    errors.push({ field: 'category', message: 'category is required' });
+  } else if (typeof data.category !== 'string') {
+    errors.push({ field: 'category', message: 'category must be a string' });
+  } else if (!VALID_CATEGORIES.includes(data.category as any)) {
+    errors.push({
+      field: 'category',
+      message: `category must be one of: ${VALID_CATEGORIES.join(', ')}`,
+    });
+  }
+
+  if (errors.length > 0) {
+    return { success: false, errors };
+  }
+
+  return {
+    success: true,
+    body: {
+      name: data.name as string,
+      description: data.description as string,
+      price: data.price as number,
+      category: data.category as CreateProductBody['category'],
+    },
+  };
+}
+
+/**
+ * Creates a new product and adds it to the products array.
+ * Generates an incremental ID and sets createdAt to the current timestamp.
+ */
+export function createProduct(products: Product[], body: CreateProductBody): Product {
+  const maxId = products.reduce((max, p) => {
+    const numId = parseInt(p.id, 10);
+    return numId > max ? numId : max;
+  }, 0);
+
+  const newProduct: Product = {
+    id: String(maxId + 1),
+    name: body.name,
+    description: body.description,
+    price: body.price,
+    category: body.category,
+    createdAt: new Date().toISOString(),
+  };
+
+  products.push(newProduct);
+  return newProduct;
 }
